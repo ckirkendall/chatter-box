@@ -14,8 +14,8 @@
 
 
 (def testing false)
-(def ws-url "ws://localhost:3000/async") 
-
+(def ws-url "ws://10.0.1.62:3000/async") 
+ 
 (defn init []
   (let [c-client (cc/create-chat-client
                   (uv/create-user-view-component)
@@ -31,6 +31,8 @@
           (fn [msg]
             (log-debug (pr-str "RECEIVE:" (.-data msg)))
             (put! in-ch (read-string (.-data msg)))))
+    (set! (.-onclose @ws)
+          (fn [msg] (.reload js/location)))
     (go
      (while true
        (let [msg (<! out-ch)]

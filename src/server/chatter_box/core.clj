@@ -4,7 +4,9 @@
               [chatter-box.chat-server :as cs]
               [chatter-box.chat-component :as c]
               [chatter-box.user-component :as u]
+              [chatter-box.channel-close-component :as cl]
               [chatter-box.event-bus :as b]
+              [chatter-box.protocol :as p]
               [org.httpkit.server :as httpkit]
               [compojure.handler :as handler]
               [compojure.route :as route]
@@ -20,7 +22,8 @@
 (defn async-handler [ring-request]
   (let [c-server (cs/create-chat-server
                   (c/create-chat-component)
-                  (u/create-user-component))
+                  (u/create-user-component)
+                  (cl/create-channel-close-component))
         out-ch (chan)
         in-ch (b/get-channel c-server)]
     (b/init c-server out-ch)
@@ -31,6 +34,9 @@
                             (let [data (read-message raw)]
                               (println "RECIEVE:" data)
                               (put! in-ch data))))
+      (httpkit/on-close channel
+                        (fn [status]
+                           (put! in-ch (p/create-message :system :close nil))))
       (go
        (while true
          (let [msg (pr-str(<! out-ch))]
