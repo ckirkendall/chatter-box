@@ -83,6 +83,7 @@
 
 
 (defn- logout []
+  (put! @out-chan (p/create-message :nav :login nil))
   (reset! user nil))
 
 
@@ -109,4 +110,5 @@
               [:security :logout] (logout)
               [:view :init] (initialize)
               [:security :login-success] (login-successfull data)
-              [:nav _] (navigate msg))))))
+              [:nav _] (navigate msg)
+              :else (log-debug (pr-str "NO MATCH FOR:" msg)))))))

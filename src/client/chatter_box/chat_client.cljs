@@ -42,7 +42,7 @@
   (go
    (while true
      (let [msg (<! in-ch)]
-       (log-debug (pr-str "MSG:" msg))
+       ;(log-debug (pr-str "MSG:" msg))
        (put! out-ch msg)))))
 
 
@@ -54,6 +54,7 @@
 
 
 (def internal-types  #{{:area :security :key :login}
+                       {:area :security :key :logout}
                       {:area :user :key :create}
                       {:area :user :key :update}
                       {:area :messaging :key :send-chat}})

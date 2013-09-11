@@ -24,8 +24,7 @@
 ;;
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-(def valid-types #{{:area :security :key :logout}
-                   {:area :security :key :login-success}
+(def valid-types #{{:area :security :key :login-success}
                    {:area :messaging :key :receive-chat}
                    {:area :messaging :key :join}
                    {:area :messaging :key :left}
@@ -59,7 +58,7 @@
   "#chat-container" (set-style :display "none")
   "#user-list *"    (remove-node)
   "#chat-list *"    (remove-node)
-  "#conv-name"      (content "Select a Users")
+  "#conv-name"      (content "Select a User")
   "#chat-form-div"  (set-style :display "none"))
 
 
@@ -78,8 +77,8 @@
               (remove-class :remote)
               (remove-class :local)
               (add-class (if (= usr @user)
-                           :local
-                           :remote)))
+                           "local"
+                           "remote")))
   "img"      (set-attr :src (:img-url usr))
   ".message" (content text))
 
@@ -109,13 +108,11 @@
 
 
 (defn load-conversation [r-usr]
-  (log-debug (pr-str "LOAD-CONV-USR:" r-usr))
   (let [r-id (str "#id_" (:username r-usr))
         messages (from r-id (get-data :msgs))]
-    (log-debug (pr-str "LOAD MESSAGES:" messages))
     (reset! active-conv r-usr)
     (at
-     "#conv-name"     (content (:username r-usr))
+     "#conv-name"     (content (str (:first r-usr) " " (:last r-usr)))
      "#chat-form-div" (set-style :display "")
      "#chat-list"     (content
                        (for [msg messages]
@@ -127,13 +124,19 @@
 
 (defn user-join [r-usr]
   (let [id (str "#id_" (:username r-usr))]
-    (at "#user-list" (append (chat-user-element r-usr))
+    (at id           (remove-node)
+        "#user-list" (append (chat-user-element r-usr))
         id           (set-data :msgs [])))) 
 
 
 
-(defaction user-left [r-usr]
-  (str "id_" (:username r-usr)) (remove-node))
+(defn user-left [r-usr]
+  (at (str "#id_" (:username r-usr)) (remove-node))
+  (when (= (:username @active-conv) (:username r-usr))
+    (at"#chat-list *"   (remove-node)
+       "#conv-name"     (content "Select a User")
+       "#chat-form-div" (set-style :display "none"))
+    (reset! active-conv nil)))
 
 
 (defn receive-chat [{remote :remote local :local text :text :as msg}]
@@ -155,7 +158,6 @@
         msg (p/send-chat-message (:username @user)
                                  (:username @active-conv)
                                  text)]
-    (log-debug (pr-str "SEND_CHAT:" msg))
     (put! @out-chan msg)
     (receive-chat (:data msg))))
 
@@ -167,12 +169,12 @@
 
 
 (defn logout []
+  (put! @out-chan (p/logout-message (:username @user)))
   (reset! user nil)
   (reset! active-conv nil)
   (at "#user-list *" (remove-node)
       "#chat-list *" (remove-node)
-      "#conv-name"   (content "Select a Users"))
-  (put! @out-chan (p/logout-message (:username @user))))
+      "#conv-name"   (content "Select a User")))
 
 (defn nav-update-user []
   (put! @out-chan (p/create-message :nav :update-user nil)))
@@ -189,7 +191,6 @@
        (match [area ky]
               [:nav _] (navigate msg)
               [:view :init] (initialize)
-              [:security :logout] (logout)
               [:security :login-success] (login-success data)
               [:messaging :receive-chat] (receive-chat data)
               [:messaging :join] (user-join data)

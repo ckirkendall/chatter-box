@@ -4,7 +4,7 @@
              :refer [at content html append prepend after befor do->
                      remove-node add-class read-form this-node from
                      set-attr set-data get-prop get-data set-style
-                     remove-attr set-prop]]
+                     remove-attr set-prop log-debug]]
             [enfocus.effects :as effects :refer [fade-in fade-out]]
             [enfocus.events :as events :refer [listen listen-live]]
             [cljs.core.async :as async :refer  [<! >! chan put!]]
@@ -100,8 +100,8 @@
    (not= (:password form) (:password2 form)) "passwords need to match"
    (empty? (:username form)) "username required"
    (empty? (:password form)) "password required"
-   (empty? (:first form)) "first name required")
-   :else :valid)
+   (empty? (:first form)) "first name required"
+   :else :valid))
 
 
 (defn- validate-update-user-form [form]
@@ -140,7 +140,7 @@
   (put! @out-chan  (p/create-message :nav :login "user created")))
 
 (defn- user-updated [usr]
-  (if (= (:username usr)
+  (when (= (:username usr)
          (:username @user))
     (reset! user usr)
     (put! @out-chan (p/create-message :nav :chat "user updated"))))

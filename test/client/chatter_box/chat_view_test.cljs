@@ -44,27 +44,27 @@
      (is (= @c/user user1))
      (is (= "f2 l2") (from "#id_u2 span" (get-text)))
 
-     ;;testing recieve chat
+     ;;testing receive chat
      (>! in-ch1 r1)
      (<! (timeout 50))
-     (is (= [r1] (from "#id_u2" (get-data :msgs))))
+     (is (= [(:data r1)] (from "#id_u2" (get-data :msgs))))
 
      ;;testing load chat
      (at "#id_u2" #(de/dispatch! % :click {}))
      (<! (timeout 50))
-     (let [text (from "#chat-list > span:nth-of-type(1)" (get-text))
+     (let [text (from "#chat-list button:last-child span" (get-text))
            text2 (from "#conv-name" (get-text))]
        (is (= "testing" text))
        (is (= "f2 l2" text2)))
      
      ;;testing send chat
-     (at "#chat-msg" (set-prop :value "Testing")
+     (at "#chat-msg" (set-prop :value "testing2")
          "#chat-btn" #(de/dispatch! % :click {}))
      (is (= s1
             (first (alts! [(timeout 100) out-ch1]))))
-     (is (= [r1 s1] (from "#id_u2" (get-data :msgs))))
+     (is (= [(:data r1) (:data s1)] (from "#id_u2" (get-data :msgs))))
      (is (= "testing2"
-            (from "#chat-list > span:nth-of-type(2)" (get-text))))
+            (from "#chat-list button:last-child span" (get-text))))
      
      ;;testing logout
      (>! in-ch1 lo1)
