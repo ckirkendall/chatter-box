@@ -14,7 +14,8 @@
 
 
 (def testing false)
-(def ws-url "ws://10.0.1.62:3000/async") 
+(def ws-url (let [hostname (.-hostname (.-location js/window))]
+              (str "ws://" hostname "/async"))) 
  
 (defn init []
   (let [c-client (cc/create-chat-client
